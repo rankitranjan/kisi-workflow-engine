@@ -3,15 +3,19 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { createDemoAccessHook } from "./auth/demo-access.js";
 import type { HttpConfig } from "./config.js";
 import type { WorkflowRepository } from "./db/workflow-repository.js";
+import type { WorkflowRunRepository } from "./db/workflow-run-repository.js";
 import { sendApiError } from "./http/errors.js";
+import { triggerRoutes } from "./routes/triggers.js";
 import { workflowRoutes } from "./routes/workflows.js";
 import { WorkflowNotFoundError, WorkflowService } from "./workflows/service.js";
 import { generateTriggerToken } from "./workflows/trigger-token.js";
 
 export type BuildAppOptions = {
   repository: WorkflowRepository;
+  runRepository: WorkflowRunRepository;
   config: HttpConfig;
   generateTriggerToken?: () => string;
+  fetchImpl?: typeof fetch;
   logger?: boolean;
 };
 
@@ -63,5 +67,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   await app.register(workflowRoutes, { prefix: "/workflows", service });
+  await app.register(triggerRoutes, {
+    prefix: "/t",
+    repository: options.repository,
+    runRepository: options.runRepository,
+    allowPrivateUrls: options.config.allowPrivateUrls,
+    fetchImpl: options.fetchImpl,
+  });
   return app;
 }

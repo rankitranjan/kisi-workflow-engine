@@ -13,6 +13,7 @@ export type WorkflowCreateRecord = {
 export interface WorkflowRepository {
   list(): Promise<PersistedWorkflow[]>;
   getById(id: string): Promise<PersistedWorkflow | null>;
+  getByTriggerToken(triggerToken: string): Promise<PersistedWorkflow | null>;
   create(input: WorkflowCreateRecord): Promise<PersistedWorkflow>;
   update(id: string, patch: WorkflowPatch): Promise<PersistedWorkflow | null>;
   replace(id: string, put: WorkflowPut): Promise<PersistedWorkflow | null>;

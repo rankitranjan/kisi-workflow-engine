@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { buildApp } from "../app.js";
 import { InMemoryWorkflowRepository } from "../db/in-memory-workflow-repository.js";
+import { InMemoryWorkflowRunRepository } from "../db/in-memory-workflow-run-repository.js";
 import type { WorkflowRepository } from "../db/workflow-repository.js";
 
 const DEMO_KEY = "test-demo-key";
@@ -40,6 +41,7 @@ function throwingRepository(): WorkflowRepository {
   return {
     list: fail,
     getById: fail,
+    getByTriggerToken: fail,
     create: fail,
     update: fail,
     replace: fail,
@@ -56,10 +58,12 @@ async function startApp(options?: {
   const repository = options?.repository ?? new InMemoryWorkflowRepository();
   const app = await buildApp({
     repository,
+    runRepository: new InMemoryWorkflowRunRepository(),
     config: {
       publicUrl: PUBLIC_URL,
       demoAccessKey: options?.demoAccessKey ?? DEMO_KEY,
       bodyLimitBytes: options?.bodyLimitBytes ?? 256 * 1024,
+      allowPrivateUrls: false,
     },
     generateTriggerToken: options?.generateTriggerToken,
     logger: false,

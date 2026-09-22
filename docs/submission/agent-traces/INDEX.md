@@ -84,3 +84,13 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - line count: 61
 
 - subagent JSONL found separately: no
+
+## 8e4c1027-c7b9-489f-ba7f-88157175bdc9
+- chat id: 8e4c1027-c7b9-489f-ba7f-88157175bdc9
+- date: 2026-09-23
+- purpose: Phase 6 — public trigger endpoint
+- source path: /Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/8e4c1027-c7b9-489f-ba7f-88157175bdc9/8e4c1027-c7b9-489f-ba7f-88157175bdc9.jsonl
+- submitted path: docs/submission/agent-traces/8e4c1027-c7b9-489f-ba7f-88157175bdc9.jsonl
+- sha256: b216fe702852b7ff634cd6dd783a6fba31e9e6274653db12623e45bf153736bc
+- line count: 43
+- subagent JSONL found separately: no

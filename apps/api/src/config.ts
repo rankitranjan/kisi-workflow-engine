@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const CRUD_BODY_LIMIT_BYTES = 256 * 1024;
+export const TRIGGER_BODY_LIMIT_BYTES = 64 * 1024;
 export const DEFAULT_PORT = 3000;
 
 const EnvSchema = z.object({
@@ -8,12 +9,14 @@ const EnvSchema = z.object({
   PUBLIC_URL: z.httpUrl(),
   DEMO_ACCESS_KEY: z.string().min(1),
   PORT: z.string().optional(),
+  ALLOW_PRIVATE_URLS: z.enum(["true", "false"]).optional(),
 });
 
 export type HttpConfig = {
   publicUrl: string;
   demoAccessKey: string;
   bodyLimitBytes: number;
+  allowPrivateUrls: boolean;
 };
 
 export type AppConfig = HttpConfig & {
@@ -33,6 +36,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     publicUrl: parsed.PUBLIC_URL,
     demoAccessKey: parsed.DEMO_ACCESS_KEY,
     bodyLimitBytes: CRUD_BODY_LIMIT_BYTES,
+    allowPrivateUrls: parsed.ALLOW_PRIVATE_URLS === "true",
     port,
   };
 }

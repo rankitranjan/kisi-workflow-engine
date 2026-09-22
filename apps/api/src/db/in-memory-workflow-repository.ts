@@ -22,6 +22,15 @@ export class InMemoryWorkflowRepository implements WorkflowRepository {
     return this.workflows.get(id) ?? null;
   }
 
+  async getByTriggerToken(triggerToken: string): Promise<PersistedWorkflow | null> {
+    for (const workflow of this.workflows.values()) {
+      if (workflow.triggerToken === triggerToken) {
+        return workflow;
+      }
+    }
+    return null;
+  }
+
   async create(input: WorkflowCreateRecord): Promise<PersistedWorkflow> {
     for (const existing of this.workflows.values()) {
       if (

@@ -59,6 +59,11 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
     return row ? toPersisted(row) : null;
   }
 
+  async getByTriggerToken(triggerToken: string): Promise<PersistedWorkflow | null> {
+    const row = await this.prisma.workflow.findUnique({ where: { triggerToken } });
+    return row ? toPersisted(row) : null;
+  }
+
   async create(input: WorkflowCreateRecord): Promise<PersistedWorkflow> {
     try {
       const row = await this.prisma.workflow.create({
