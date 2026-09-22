@@ -24,6 +24,12 @@ export const WorkflowPatchSchema = z.strictObject({
   steps: WorkflowStepsSchema.optional(),
 });
 
+export const WorkflowPutSchema = z.strictObject({
+  name: WorkflowNameSchema,
+  enabled: z.boolean(),
+  steps: WorkflowStepsSchema,
+});
+
 export const WorkflowSchema = z
   .strictObject({
     id: z.uuid(),
@@ -50,4 +56,5 @@ export const WorkflowSchema = z
 
 export type WorkflowCreate = z.infer<typeof WorkflowCreateSchema>;
 export type WorkflowPatch = z.infer<typeof WorkflowPatchSchema>;
+export type WorkflowPut = z.infer<typeof WorkflowPutSchema>;
 export type Workflow = z.infer<typeof WorkflowSchema>;

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { WorkflowCreateSchema, WorkflowPatchSchema, WorkflowSchema } from "./workflow.js";
+import {
+  WorkflowCreateSchema,
+  WorkflowPatchSchema,
+  WorkflowPutSchema,
+  WorkflowSchema,
+} from "./workflow.js";
 
 function issuePaths(result: {
   success: boolean;
@@ -134,6 +139,37 @@ describe("WorkflowPatchSchema", () => {
 
   it("rejects triggerToken so the token stays immutable", () => {
     const result = WorkflowPatchSchema.safeParse({ triggerToken: token });
+    expect(result.success).toBe(false);
+    expect(unrecognizedKeys(result)).toContain("triggerToken");
+  });
+});
+
+describe("WorkflowPutSchema", () => {
+  it("accepts a full replace payload with name, enabled, and steps", () => {
+    const result = WorkflowPutSchema.safeParse({
+      name: "Unlock alerts",
+      enabled: false,
+      steps: [],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing enabled flag because PUT is a full replace", () => {
+    const result = WorkflowPutSchema.safeParse({
+      name: "Unlock alerts",
+      steps: [],
+    });
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toContainEqual(["enabled"]);
+  });
+
+  it("rejects triggerToken so the token stays immutable", () => {
+    const result = WorkflowPutSchema.safeParse({
+      name: "Unlock alerts",
+      enabled: true,
+      steps: [],
+      triggerToken: token,
+    });
     expect(result.success).toBe(false);
     expect(unrecognizedKeys(result)).toContain("triggerToken");
   });
