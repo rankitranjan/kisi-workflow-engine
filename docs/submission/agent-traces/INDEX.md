@@ -1,0 +1,32 @@
+# Agent traces
+
+Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcripts.
+
+## a1d078a8-2fad-43f7-80cf-a11c90699d9c
+
+- chat id: `a1d078a8-2fad-43f7-80cf-a11c90699d9c`
+- date: 2026-09-21
+- purpose: planning (requirements, architecture plan, human-approved defaults) and phase 1–2 execution (trace baseline + repo baseline)
+- source path: `/Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/a1d078a8-2fad-43f7-80cf-a11c90699d9c/a1d078a8-2fad-43f7-80cf-a11c90699d9c.jsonl`
+- submitted path: `docs/submission/agent-traces/a1d078a8-2fad-43f7-80cf-a11c90699d9c.jsonl`
+- sha256: `29d9e2b34d778a0f2004202a50b2b3c5def16e0d95bea94efa3a858e81d0533d`
+- line count: 25
+- subagent JSONL found separately: no (only this parent chat directory exists under `agent-transcripts/`; no `Task` / bugbot / security-review subagent has run yet)
+
+## f3d36980-b373-4f90-a7d3-6d1f0efc69b5
+
+- chat id: `f3d36980-b373-4f90-a7d3-6d1f0efc69b5`
+
+- date: 2026-09-22
+
+- purpose: creation of the `workflow-engine-tdd` project skill
+
+- source path: `/Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/f3d36980-b373-4f90-a7d3-6d1f0efc69b5/f3d36980-b373-4f90-a7d3-6d1f0efc69b5.jsonl`
+
+- submitted path: `docs/submission/agent-traces/f3d36980-b373-4f90-a7d3-6d1f0efc69b5.jsonl`
+
+- sha256: `1498b01eac4ce2ece8c646a3885fc496b80629e40c202aba31811659696fd4b4`
+
+- line count: 18
+
+- subagent JSONL found separately: no
