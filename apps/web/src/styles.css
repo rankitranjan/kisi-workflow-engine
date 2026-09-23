@@ -1,0 +1,118 @@
+:root {
+  color: #1c1c1c;
+  background: #f5f6f8;
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+h1 {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+a {
+  color: #0b3d91;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  margin: 12px 0;
+}
+
+input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+input:not([type="checkbox"]) {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+}
+
+.workflow-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.workflow-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #d8dbe2;
+}
+
+.workflow-name {
+  font-weight: 600;
+  min-width: 12rem;
+}
+
+.workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.trigger-url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
+.trigger-url label,
+.trigger-url input {
+  flex: 1 1 16rem;
+}
+
+[role="alert"] {
+  color: #8a1f1f;
+}
+
+form > button {
+  margin-top: 16px;
+}
