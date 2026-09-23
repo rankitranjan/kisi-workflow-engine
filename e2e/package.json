@@ -1,0 +1,17 @@
+{
+  "name": "@kisi-workflow/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright install chromium && playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kisi-workflow/shared": "*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.18.1"
+  }
+}

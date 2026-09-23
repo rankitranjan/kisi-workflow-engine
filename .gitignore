@@ -11,3 +11,6 @@ coverage/
 .idea/
 .vscode/
 docker-data/
+test-results/
+playwright-report/
+blob-report/

@@ -114,3 +114,12 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - sha256: b73fd2901c5189b5e25c9ab98e66dbd089e73b4eb124fbcb2ba1f8d8f2e7cdd6
 - line count: 51
 - subagent JSONL found separately: no
+
+## a1db46a3-1418-4cdf-bd5a-71131e609292
+- Date: 2026-09-24
+- Purpose: Phase 9 — Playwright E2E with mock webhook
+- Source: /Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/a1db46a3-1418-4cdf-bd5a-71131e609292/a1db46a3-1418-4cdf-bd5a-71131e609292.jsonl
+- Submitted copy: docs/submission/agent-traces/a1db46a3-1418-4cdf-bd5a-71131e609292.jsonl
+- SHA-256: 030c18c1b389c7eb66f2c9decea9f4d26fb371bd5823e774514089fe58b3f5ab
+- Lines: 98
+- Subagents: none

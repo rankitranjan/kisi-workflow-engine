@@ -1,0 +1,5 @@
+# Host 5432 may already be another Postgres. Publish the Compose server on 5433 for E2E.
+services:
+  postgres:
+    ports:
+      - "5433:5432"
