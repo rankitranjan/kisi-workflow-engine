@@ -12,6 +12,7 @@ import type { WorkflowRepository } from "../db/workflow-repository.js";
 import type { WorkflowRunRepository } from "../db/workflow-run-repository.js";
 import { executeWorkflow } from "../engine/runner.js";
 import { sendApiError } from "../http/errors.js";
+import type { DnsResolver } from "../security/ssrf.js";
 
 const TriggerParamsSchema = z.strictObject({
   triggerToken: TriggerTokenSchema,
@@ -36,6 +37,7 @@ export type TriggerRouteOptions = {
   runRepository: WorkflowRunRepository;
   allowPrivateUrls: boolean;
   fetchImpl?: typeof fetch;
+  resolve?: DnsResolver;
 };
 
 export const triggerRoutes: FastifyPluginAsync<TriggerRouteOptions> = async (app, opts) => {
@@ -77,6 +79,7 @@ export const triggerRoutes: FastifyPluginAsync<TriggerRouteOptions> = async (app
           runRepository: opts.runRepository,
           allowPrivateUrls: opts.allowPrivateUrls,
           fetchImpl: opts.fetchImpl,
+          resolve: opts.resolve,
         },
       );
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "DATABASE_URL=${DATABASE_URL:-postgresql://kisi:kisi@localhost:5432/workflow_engine} prisma generate && tsc --noEmit",
     "prisma:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://kisi:kisi@localhost:5432/workflow_engine} prisma generate",
     "prisma:migrate": "prisma migrate deploy",

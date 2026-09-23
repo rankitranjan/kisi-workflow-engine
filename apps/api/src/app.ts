@@ -7,6 +7,7 @@ import type { WorkflowRunRepository } from "./db/workflow-run-repository.js";
 import { sendApiError } from "./http/errors.js";
 import { triggerRoutes } from "./routes/triggers.js";
 import { workflowRoutes } from "./routes/workflows.js";
+import type { DnsResolver } from "./security/ssrf.js";
 import { WorkflowNotFoundError, WorkflowService } from "./workflows/service.js";
 import { generateTriggerToken } from "./workflows/trigger-token.js";
 
@@ -16,6 +17,7 @@ export type BuildAppOptions = {
   config: HttpConfig;
   generateTriggerToken?: () => string;
   fetchImpl?: typeof fetch;
+  resolve?: DnsResolver;
   logger?: boolean;
 };
 
@@ -73,6 +75,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     runRepository: options.runRepository,
     allowPrivateUrls: options.config.allowPrivateUrls,
     fetchImpl: options.fetchImpl,
+    resolve: options.resolve,
   });
   return app;
 }

@@ -104,3 +104,13 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - sha256: f7383e8aad2b79ed981eebfb13acfc5ed3fe2fc9b337963f5e77e99e2b09ca6e
 - line count: 32
 - subagent JSONL found separately: no
+
+## db866ec3-45cc-424f-8fb1-205c35110e4f
+- chat id: db866ec3-45cc-424f-8fb1-205c35110e4f
+- date: 2026-09-24
+- purpose: Phase 8 — PostgreSQL integration tests
+- source path: /Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/db866ec3-45cc-424f-8fb1-205c35110e4f/db866ec3-45cc-424f-8fb1-205c35110e4f.jsonl
+- submitted path: docs/submission/agent-traces/db866ec3-45cc-424f-8fb1-205c35110e4f.jsonl
+- sha256: b73fd2901c5189b5e25c9ab98e66dbd089e73b4eb124fbcb2ba1f8d8f2e7cdd6
+- line count: 51
+- subagent JSONL found separately: no
