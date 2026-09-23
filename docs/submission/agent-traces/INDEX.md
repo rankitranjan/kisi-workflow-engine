@@ -123,3 +123,12 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - SHA-256: 030c18c1b389c7eb66f2c9decea9f4d26fb371bd5823e774514089fe58b3f5ab
 - Lines: 98
 - Subagents: none
+
+## 849e29d5-60f0-41b1-be6d-a6f0afc2b282
+- Date: 2026-09-24
+- Purpose: Phase 10 — seed demo workflow + Discord webhook
+- Source: /Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/849e29d5-60f0-41b1-be6d-a6f0afc2b282/849e29d5-60f0-41b1-be6d-a6f0afc2b282.jsonl
+- Submitted copy: docs/submission/agent-traces/849e29d5-60f0-41b1-be6d-a6f0afc2b282.jsonl
+- SHA-256: bcb61da91ea3f99e3730e865409da1fe4921eb8c90a0ffefd234e25f7227df9c
+- Lines: 33
+- Subagents: none

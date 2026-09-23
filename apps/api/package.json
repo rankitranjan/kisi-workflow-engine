@@ -10,7 +10,8 @@
     "prisma:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://kisi:kisi@localhost:5432/workflow_engine} prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "seed": "tsx src/seed/seed-demo.ts"
   },
   "dependencies": {
     "@kisi-workflow/shared": "*",
