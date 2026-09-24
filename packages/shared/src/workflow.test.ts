@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { WorkflowStepsSchema } from "./steps.js";
 import {
   WorkflowCreateSchema,
+  WorkflowDetailSchema,
+  WorkflowListItemSchema,
   WorkflowPatchSchema,
   WorkflowPutSchema,
   WorkflowSchema,
@@ -46,6 +49,14 @@ const validWorkflow = {
   steps: [],
   createdAt: "2026-09-22T07:12:00.000Z",
   updatedAt: "2026-09-22T07:12:00.000Z",
+};
+
+const httpStep = {
+  type: "http_request" as const,
+  method: "POST" as const,
+  url: "https://example.com/hook",
+  timeoutMs: 2000,
+  retries: 3,
 };
 
 describe("WorkflowCreateSchema", () => {
@@ -129,6 +140,13 @@ describe("WorkflowPatchSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a redacted webhook marker in steps", () => {
+    const result = WorkflowPatchSchema.safeParse({
+      steps: [{ ...httpStep, url: { redacted: true } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects invalid steps in a patch", () => {
     const result = WorkflowPatchSchema.safeParse({
       steps: [{ type: "delay" }],
@@ -154,6 +172,15 @@ describe("WorkflowPutSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a redacted webhook marker in steps", () => {
+    const result = WorkflowPutSchema.safeParse({
+      name: "Unlock alerts",
+      enabled: true,
+      steps: [{ ...httpStep, url: { redacted: true } }],
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a missing enabled flag because PUT is a full replace", () => {
     const result = WorkflowPutSchema.safeParse({
       name: "Unlock alerts",
@@ -172,6 +199,64 @@ describe("WorkflowPutSchema", () => {
     });
     expect(result.success).toBe(false);
     expect(unrecognizedKeys(result)).toContain("triggerToken");
+  });
+});
+
+const listItem = {
+  id: validWorkflow.id,
+  name: validWorkflow.name,
+  enabled: true,
+  triggerUrl: validWorkflow.triggerUrl,
+};
+
+describe("WorkflowListItemSchema", () => {
+  it("accepts id, name, enabled, and triggerUrl", () => {
+    const result = WorkflowListItemSchema.safeParse(listItem);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects steps so the list payload cannot carry a webhook URL", () => {
+    const result = WorkflowListItemSchema.safeParse({ ...listItem, steps: [] });
+    expect(result.success).toBe(false);
+    expect(unrecognizedKeys(result)).toContain("steps");
+  });
+});
+
+describe("WorkflowDetailSchema", () => {
+  it("accepts a normal http_request URL", () => {
+    const result = WorkflowDetailSchema.safeParse({ ...listItem, steps: [httpStep] });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.steps).toEqual([httpStep]);
+    }
+  });
+
+  it("accepts a redacted webhook marker in place of a URL", () => {
+    const result = WorkflowDetailSchema.safeParse({
+      ...listItem,
+      steps: [{ ...httpStep, url: { redacted: true } }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.steps).toEqual([{ ...httpStep, url: { redacted: true } }]);
+    }
+  });
+
+  it("rejects a redacted marker that is not exactly { redacted: true }", () => {
+    const result = WorkflowDetailSchema.safeParse({
+      ...listItem,
+      steps: [{ ...httpStep, url: { redacted: false } }],
+    });
+    expect(result.success).toBe(false);
+    expect(issuePaths(result).some((path) => path[0] === "steps")).toBe(true);
+  });
+});
+
+describe("persisted workflow steps", () => {
+  it("rejects the redacted marker because persistence accepts only real URLs", () => {
+    const result = WorkflowStepsSchema.safeParse([{ ...httpStep, url: { redacted: true } }]);
+    expect(result.success).toBe(false);
+    expect(issuePaths(result)).toContainEqual([0, "url"]);
   });
 });
 

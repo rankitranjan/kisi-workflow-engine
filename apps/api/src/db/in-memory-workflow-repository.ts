@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type { WorkflowPatch, WorkflowPut } from "@kisi-workflow/shared";
-
 import { UniqueTriggerTokenError } from "./errors.js";
 import type {
   PersistedWorkflow,
   WorkflowCreateRecord,
+  WorkflowReplaceRecord,
   WorkflowRepository,
+  WorkflowUpdateRecord,
 } from "./workflow-repository.js";
 
 export class InMemoryWorkflowRepository implements WorkflowRepository {
@@ -56,7 +56,7 @@ export class InMemoryWorkflowRepository implements WorkflowRepository {
     return record;
   }
 
-  async update(id: string, patch: WorkflowPatch): Promise<PersistedWorkflow | null> {
+  async update(id: string, patch: WorkflowUpdateRecord): Promise<PersistedWorkflow | null> {
     const existing = this.workflows.get(id);
     if (!existing) {
       return null;
@@ -73,7 +73,7 @@ export class InMemoryWorkflowRepository implements WorkflowRepository {
     return updated;
   }
 
-  async replace(id: string, put: WorkflowPut): Promise<PersistedWorkflow | null> {
+  async replace(id: string, put: WorkflowReplaceRecord): Promise<PersistedWorkflow | null> {
     const existing = this.workflows.get(id);
     if (!existing) {
       return null;

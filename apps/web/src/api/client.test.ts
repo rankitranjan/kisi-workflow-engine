@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sampleWorkflow } from "../test/fixtures";
+import { sampleWorkflowDetail, sampleWorkflowListItem } from "../test/fixtures";
 import {
   ApiClientError,
   MissingDemoAccessKeyError,
@@ -13,7 +13,8 @@ import {
   setWorkflowEnabled,
 } from "./client";
 
-const workflow = sampleWorkflow();
+const workflow = sampleWorkflowDetail();
+const listItem = sampleWorkflowListItem();
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -53,9 +54,9 @@ describe("workflow API client", () => {
   });
 
   it("lists workflows with the demo credential header", async () => {
-    fetchMock.mockResolvedValue(jsonResponse(200, [workflow]));
+    fetchMock.mockResolvedValue(jsonResponse(200, [listItem]));
 
-    await expect(listWorkflows()).resolves.toEqual([workflow]);
+    await expect(listWorkflows()).resolves.toEqual([listItem]);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] ?? [];
@@ -68,7 +69,7 @@ describe("workflow API client", () => {
 
   it("sends workflow collection requests to VITE_API_URL", async () => {
     vi.stubEnv("VITE_API_URL", "https://api.example.com");
-    fetchMock.mockResolvedValue(jsonResponse(200, [workflow]));
+    fetchMock.mockResolvedValue(jsonResponse(200, [listItem]));
 
     await listWorkflows();
 
@@ -89,7 +90,7 @@ describe("workflow API client", () => {
 
   it("does not insert a double slash when VITE_API_URL has a trailing slash", async () => {
     vi.stubEnv("VITE_API_URL", "https://api.example.com/");
-    fetchMock.mockResolvedValue(jsonResponse(200, [workflow]));
+    fetchMock.mockResolvedValue(jsonResponse(200, [listItem]));
 
     await listWorkflows();
 

@@ -19,7 +19,10 @@ export const workflowRoutes: FastifyPluginAsync<{ service: WorkflowService }> = 
 ) => {
   const { service } = opts;
 
-  app.get("/", async () => service.list());
+  app.get("/", async () => {
+    const workflows = await service.list();
+    return workflows.map((workflow) => service.toListItem(workflow));
+  });
 
   app.post("/", async (request, reply) => {
     const parsed = WorkflowCreateSchema.safeParse(request.body);
@@ -30,7 +33,7 @@ export const workflowRoutes: FastifyPluginAsync<{ service: WorkflowService }> = 
       });
     }
     const created = await service.create(parsed.data);
-    return reply.status(201).send(created);
+    return reply.status(201).send(service.toDetail(created));
   });
 
   app.get("/:id", async (request, reply) => {
@@ -41,7 +44,7 @@ export const workflowRoutes: FastifyPluginAsync<{ service: WorkflowService }> = 
         details: params.error.flatten(),
       });
     }
-    return service.getById(params.data.id);
+    return service.toDetail(await service.getById(params.data.id));
   });
 
   app.patch("/:id", async (request, reply) => {
@@ -59,7 +62,7 @@ export const workflowRoutes: FastifyPluginAsync<{ service: WorkflowService }> = 
         details: parsed.error.flatten(),
       });
     }
-    return service.patch(params.data.id, parsed.data);
+    return service.toDetail(await service.patch(params.data.id, parsed.data));
   });
 
   app.put("/:id", async (request, reply) => {
@@ -77,7 +80,7 @@ export const workflowRoutes: FastifyPluginAsync<{ service: WorkflowService }> = 
         details: parsed.error.flatten(),
       });
     }
-    return service.put(params.data.id, parsed.data);
+    return service.toDetail(await service.put(params.data.id, parsed.data));
   });
 
   app.delete("/:id", async (request, reply) => {

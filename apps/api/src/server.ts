@@ -12,8 +12,9 @@ const app = await buildApp({
     publicUrl: config.publicUrl,
     demoAccessKey: config.demoAccessKey,
     bodyLimitBytes: config.bodyLimitBytes,
-    allowPrivateUrls: config.allowPrivateUrls,
-  },
+      allowPrivateUrls: config.allowPrivateUrls,
+      demoWebhookUrl: config.demoWebhookUrl,
+    },
   logger: true,
 });
 

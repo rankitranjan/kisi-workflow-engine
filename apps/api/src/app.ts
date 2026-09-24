@@ -9,7 +9,11 @@ import { sendApiError } from "./http/errors.js";
 import { triggerRoutes } from "./routes/triggers.js";
 import { workflowRoutes } from "./routes/workflows.js";
 import type { DnsResolver } from "./security/ssrf.js";
-import { WorkflowNotFoundError, WorkflowService } from "./workflows/service.js";
+import {
+  UnresolvedRedactedWebhookError,
+  WorkflowNotFoundError,
+  WorkflowService,
+} from "./workflows/service.js";
 import { generateTriggerToken } from "./workflows/trigger-token.js";
 
 export type BuildAppOptions = {
@@ -46,6 +50,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     options.repository,
     options.config.publicUrl,
     options.generateTriggerToken ?? generateTriggerToken,
+    options.config.demoWebhookUrl,
   );
 
   app.addHook("onRequest", createDemoAccessHook(options.config.demoAccessKey));
@@ -57,6 +62,15 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof WorkflowNotFoundError) {
       return sendApiError(reply, { error: "not_found" });
+    }
+    if (error instanceof UnresolvedRedactedWebhookError) {
+      return sendApiError(reply, {
+        error: "validation_error",
+        details: {
+          formErrors: ["A redacted webhook URL cannot be saved."],
+          fieldErrors: {},
+        },
+      });
     }
     if (isHttpError(error) && isBodyTooLarge(error)) {
       return sendApiError(reply, { error: "payload_too_large" });

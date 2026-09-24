@@ -118,6 +118,33 @@ describe("validateReplaceForm", () => {
     });
   });
 
+  it("accepts a redacted webhook marker", () => {
+    expect(
+      validateReplaceForm({
+        name: "Unlock alerts",
+        enabled: true,
+        stepsText: JSON.stringify([
+          { type: "http_request", method: "POST", url: { redacted: true } },
+        ]),
+      }),
+    ).toEqual({
+      ok: true,
+      body: {
+        name: "Unlock alerts",
+        enabled: true,
+        steps: [
+          {
+            type: "http_request",
+            method: "POST",
+            url: { redacted: true },
+            timeoutMs: 2000,
+            retries: 3,
+          },
+        ],
+      },
+    });
+  });
+
   it("reports name and steps errors together", () => {
     const result = validateReplaceForm({ name: "", enabled: true, stepsText: "{" });
     expect(result).toEqual({

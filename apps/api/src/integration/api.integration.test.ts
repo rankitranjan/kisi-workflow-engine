@@ -6,9 +6,10 @@ import { PrismaClient } from "@prisma/client";
 import {
   ApiErrorSchema,
   TriggerResponseSchema,
+  WorkflowDetailSchema,
+  WorkflowListItemSchema,
   WorkflowRunSchema,
-  WorkflowSchema,
-  type Workflow,
+  type WorkflowDetail,
   type WorkflowRun,
 } from "@kisi-workflow/shared";
 import type { FastifyInstance } from "fastify";
@@ -161,7 +162,7 @@ function unreachableHttp(): { fetchImpl: typeof fetch; resolve: DnsResolver } {
 async function createWorkflow(
   current: FastifyInstance,
   payload: { name: string; enabled?: boolean; steps: unknown[] },
-): Promise<Workflow> {
+): Promise<WorkflowDetail & { triggerToken: string }> {
   const response = await current.inject({
     method: "POST",
     url: "/workflows",
@@ -169,7 +170,12 @@ async function createWorkflow(
     payload,
   });
   expect(response.statusCode).toBe(201);
-  return WorkflowSchema.parse(response.json());
+  const detail = WorkflowDetailSchema.parse(response.json());
+  const row = await prisma.workflow.findUnique({ where: { id: detail.id } });
+  if (!row) {
+    throw new Error("missing created workflow");
+  }
+  return { ...detail, triggerToken: row.triggerToken };
 }
 
 async function persistedRun(id: string): Promise<WorkflowRun> {
@@ -232,9 +238,15 @@ describe("PostgreSQL API integration", () => {
       headers: authHeaders(),
     });
     expect(list.statusCode).toBe(200);
-    expect(WorkflowSchema.array().parse(list.json())).toEqual([
-      expect.objectContaining({ id: created.id, steps: [filterStep] }),
+    expect(WorkflowListItemSchema.array().parse(list.json())).toEqual([
+      expect.objectContaining({
+        id: created.id,
+        name: "Unlock alerts",
+        enabled: true,
+        triggerUrl: created.triggerUrl,
+      }),
     ]);
+    expect(list.body).not.toContain("steps");
 
     const fetched = await current.inject({
       method: "GET",
@@ -242,7 +254,7 @@ describe("PostgreSQL API integration", () => {
       headers: authHeaders(),
     });
     expect(fetched.statusCode).toBe(200);
-    expect(WorkflowSchema.parse(fetched.json()).steps).toEqual([filterStep]);
+    expect(WorkflowDetailSchema.parse(fetched.json()).steps).toEqual([filterStep]);
 
     const patched = await current.inject({
       method: "PATCH",
@@ -251,7 +263,7 @@ describe("PostgreSQL API integration", () => {
       payload: { enabled: false },
     });
     expect(patched.statusCode).toBe(200);
-    const patchedBody = WorkflowSchema.parse(patched.json());
+    const patchedBody = WorkflowDetailSchema.parse(patched.json());
     expect(patchedBody.enabled).toBe(false);
     expect(patchedBody.steps).toEqual([filterStep]);
     const patchedRow = await prisma.workflow.findUnique({ where: { id: created.id } });
@@ -265,7 +277,7 @@ describe("PostgreSQL API integration", () => {
       payload: { name: "Renamed alerts", enabled: true, steps: [replacementStep] },
     });
     expect(replaced.statusCode).toBe(200);
-    expect(WorkflowSchema.parse(replaced.json()).steps).toEqual([replacementStep]);
+    expect(WorkflowDetailSchema.parse(replaced.json()).steps).toEqual([replacementStep]);
     const replacedRow = await prisma.workflow.findUnique({ where: { id: created.id } });
     expect(replacedRow?.name).toBe("Renamed alerts");
     expect(replacedRow?.steps).toEqual([replacementStep]);

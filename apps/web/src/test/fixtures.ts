@@ -1,4 +1,11 @@
-import { WorkflowSchema, type Workflow } from "@kisi-workflow/shared";
+import {
+  WorkflowDetailSchema,
+  WorkflowListItemSchema,
+  WorkflowSchema,
+  type Workflow,
+  type WorkflowDetail,
+  type WorkflowListItem,
+} from "@kisi-workflow/shared";
 
 const token = "4f1f9a2c9b7f4f2a9b2e2f7d4a3c1b0e";
 
@@ -13,6 +20,29 @@ export function sampleWorkflow(overrides: Partial<Workflow> = {}): Workflow {
     steps: [],
     createdAt: "2026-09-22T07:12:00.000Z",
     updatedAt: "2026-09-22T07:12:00.000Z",
+    ...overrides,
+  });
+}
+
+export function sampleWorkflowDetail(overrides: Partial<WorkflowDetail> = {}): WorkflowDetail {
+  const workflow = sampleWorkflow();
+  return WorkflowDetailSchema.parse({
+    id: workflow.id,
+    name: workflow.name,
+    enabled: workflow.enabled,
+    triggerUrl: workflow.triggerUrl,
+    steps: workflow.steps,
+    ...overrides,
+  });
+}
+
+export function sampleWorkflowListItem(overrides: Partial<WorkflowListItem> = {}): WorkflowListItem {
+  const workflow = sampleWorkflow();
+  return WorkflowListItemSchema.parse({
+    id: workflow.id,
+    name: workflow.name,
+    enabled: workflow.enabled,
+    triggerUrl: workflow.triggerUrl,
     ...overrides,
   });
 }
