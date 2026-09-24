@@ -1,3 +1,4 @@
+import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
 
 import { createDemoAccessHook } from "./auth/demo-access.js";
@@ -33,6 +34,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const app = Fastify({
     logger: options.logger ?? false,
     bodyLimit: options.config.bodyLimitBytes,
+  });
+
+  await app.register(cors, {
+    origin: new URL(options.config.publicUrl).origin,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["content-type", "x-demo-key", "accept"],
   });
 
   const service = new WorkflowService(
