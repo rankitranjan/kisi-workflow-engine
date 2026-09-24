@@ -75,6 +75,15 @@ function workflowUrl(id: string): string {
   return `/workflows/${encodeURIComponent(id)}`;
 }
 
+function resolveApiUrl(path: string): string {
+  const base = import.meta.env.VITE_API_URL;
+  if (typeof base !== "string" || base.length === 0) {
+    return path;
+  }
+  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  return `${normalizedBase}${path}`;
+}
+
 async function send(path: string, init: { method: string; body?: string }): Promise<unknown> {
   const key = readDemoAccessKey();
   if (key === undefined) {
@@ -89,7 +98,7 @@ async function send(path: string, init: { method: string; body?: string }): Prom
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiUrl(path), {
     method: init.method,
     headers,
     body: init.body,

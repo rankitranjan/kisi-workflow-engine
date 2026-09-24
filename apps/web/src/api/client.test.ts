@@ -66,6 +66,37 @@ describe("workflow API client", () => {
     expect(String(url)).not.toMatch(/^\/t\//);
   });
 
+  it("sends workflow collection requests to VITE_API_URL", async () => {
+    vi.stubEnv("VITE_API_URL", "https://api.example.com");
+    fetchMock.mockResolvedValue(jsonResponse(200, [workflow]));
+
+    await listWorkflows();
+
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    expect(url).toBe("https://api.example.com/workflows");
+    expect(headerValue(init, "x-demo-key")).toBe("demo-access-key");
+  });
+
+  it("sends workflow-by-id requests to VITE_API_URL", async () => {
+    vi.stubEnv("VITE_API_URL", "https://api.example.com");
+    fetchMock.mockResolvedValue(jsonResponse(200, workflow));
+
+    await getWorkflow(workflow.id);
+
+    const [url] = fetchMock.mock.calls[0] ?? [];
+    expect(url).toBe(`https://api.example.com/workflows/${workflow.id}`);
+  });
+
+  it("does not insert a double slash when VITE_API_URL has a trailing slash", async () => {
+    vi.stubEnv("VITE_API_URL", "https://api.example.com/");
+    fetchMock.mockResolvedValue(jsonResponse(200, [workflow]));
+
+    await listWorkflows();
+
+    const [url] = fetchMock.mock.calls[0] ?? [];
+    expect(url).toBe("https://api.example.com/workflows");
+  });
+
   it("throws the shared unauthorized error", async () => {
     fetchMock.mockResolvedValue(jsonResponse(401, { error: "unauthorized" }));
 
