@@ -148,3 +148,19 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - Lines: 53
 
 - Subagents: none
+
+## 717cb5d8-06f8-45b5-8392-a1e1eeaae72f
+
+- Date: 2026-09-24
+
+- Purpose: Production fix — frontend API base URL resolution with TDD
+
+- Source: /Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/717cb5d8-06f8-45b5-8392-a1e1eeaae72f/717cb5d8-06f8-45b5-8392-a1e1eeaae72f.jsonl
+
+- Submitted copy: docs/submission/agent-traces/717cb5d8-06f8-45b5-8392-a1e1eeaae72f.jsonl
+
+- SHA-256: f4f3190719d5b8f571f97236e78d586f012be929bb6beb20d8caed7bd7d1bf9b
+
+- Lines: 13
+
+- Subagents: none
