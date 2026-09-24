@@ -9,11 +9,13 @@ import {
   replaceWorkflow,
 } from "../api/client";
 import { JsonEditor } from "../components/JsonEditor";
+import { useToast } from "../components/toast";
 import { validateCreateForm, validateReplaceForm } from "../validation";
 
 export function WorkflowEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const isNew = id === undefined;
 
   const [name, setName] = useState("");
@@ -24,7 +26,6 @@ export function WorkflowEditor() {
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
-  const [copyError, setCopyError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (id === undefined) {
@@ -74,6 +75,7 @@ export function WorkflowEditor() {
           return;
         }
         const created = await createWorkflow(parsed.body);
+        showToast("Workflow created successfully", "success");
         await navigate(`/workflows/${created.id}`);
         return;
       }
@@ -85,8 +87,10 @@ export function WorkflowEditor() {
         return;
       }
       await replaceWorkflow(id, parsed.body);
+      showToast("Workflow updated successfully", "success");
     } catch (error: unknown) {
       setSaveError(formatApiError(error));
+      showToast("Failed to save workflow", "error");
     } finally {
       setSaving(false);
     }
@@ -98,18 +102,24 @@ export function WorkflowEditor() {
     }
     try {
       await navigator.clipboard.writeText(triggerUrl);
-      setCopyError(undefined);
+      showToast("Trigger URL copied", "success");
     } catch {
-      setCopyError("Could not copy the trigger URL.");
+      showToast("Failed to copy trigger URL", "error");
     }
   }
 
   return (
-    <main>
-      <p>
-        <Link to="/">Workflows</Link>
-      </p>
-      <h1>{isNew ? "Create workflow" : "Edit workflow"}</h1>
+    <main className="page">
+      <header className="page-header">
+        <div>
+          <h1>{isNew ? "Create workflow" : "Edit workflow"}</h1>
+          <p className="lede">
+            {isNew
+              ? "Define the steps for a new HTTP-triggered workflow."
+              : "Update this workflow and its HTTP trigger."}
+          </p>
+        </div>
+      </header>
       {loading ? <p>Loading workflow...</p> : null}
       {loadError !== undefined ? (
         <p role="alert">
@@ -117,7 +127,7 @@ export function WorkflowEditor() {
         </p>
       ) : null}
       {!loading && loadError === undefined ? (
-        <form onSubmit={(event) => void onSubmit(event)}>
+        <form className="editor-form" onSubmit={(event) => void onSubmit(event)}>
           <label>
             Name
             <input value={name} onChange={(event) => setName(event.target.value)} />
@@ -125,7 +135,7 @@ export function WorkflowEditor() {
           {!validation.ok && validation.errors.name !== undefined ? (
             <p role="alert">{validation.errors.name}</p>
           ) : null}
-          <label>
+          <label className="switch">
             <input
               type="checkbox"
               checked={enabled}
@@ -133,25 +143,34 @@ export function WorkflowEditor() {
             />
             Enabled
           </label>
-          <label htmlFor="workflow-steps">Steps</label>
-          <JsonEditor value={stepsText} onChange={setStepsText} />
-          {!validation.ok && validation.errors.steps !== undefined ? (
-            <p role="alert">{validation.errors.steps}</p>
-          ) : null}
-          {isNew ? <p>The trigger URL is assigned when you save.</p> : null}
-          {!isNew && triggerUrl !== undefined ? (
-            <div className="trigger-url">
-              <label htmlFor="trigger-url">Trigger URL</label>
-              <input id="trigger-url" readOnly value={triggerUrl} />
-              <button type="button" onClick={() => void onCopy()}>
-                Copy
-              </button>
+          <section className="panel">
+            <h2>HTTP Trigger</h2>
+            {isNew ? <p>The trigger URL is assigned when you save.</p> : null}
+            {!isNew && triggerUrl !== undefined ? (
+              <div className="trigger-row">
+                <span className="method-badge">POST</span>
+                <label htmlFor="trigger-url">
+                  Trigger URL
+                  <input id="trigger-url" readOnly value={triggerUrl} />
+                </label>
+                <button className="button" type="button" onClick={() => void onCopy()}>
+                  Copy
+                </button>
+              </div>
+            ) : null}
+          </section>
+          <section className="panel">
+            <h2>Steps</h2>
+            <div className="monaco-frame">
+              <JsonEditor value={stepsText} onChange={setStepsText} />
             </div>
-          ) : null}
-          {copyError !== undefined ? <p role="alert">{copyError}</p> : null}
+            {!validation.ok && validation.errors.steps !== undefined ? (
+              <p role="alert">{validation.errors.steps}</p>
+            ) : null}
+          </section>
           {saveError !== undefined ? <p role="alert">{saveError}</p> : null}
-          <button type="submit" disabled={!validation.ok || saving}>
-            {saving ? "Saving..." : "Save"}
+          <button className="button button-primary" type="submit" disabled={!validation.ok || saving}>
+            {saving ? "Saving..." : "Save Workflow"}
           </button>
         </form>
       ) : null}

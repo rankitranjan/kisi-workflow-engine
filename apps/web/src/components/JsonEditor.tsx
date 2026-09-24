@@ -10,6 +10,7 @@ export function JsonEditor({ value, onChange }: JsonEditorProps) {
     <Editor
       height="360px"
       language="json"
+      theme="vs-dark"
       value={value}
       onChange={(next) => onChange(next ?? "")}
       options={{

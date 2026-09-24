@@ -1,4 +1,5 @@
 import { ApiClientError, deleteWorkflow, listWorkflows, setWorkflowEnabled } from "../api/client";
+import { ToastProvider } from "../components/toast";
 import { sampleWorkflow } from "../test/fixtures";
 import { WorkflowList } from "./WorkflowList";
 import { render, screen } from "@testing-library/react";
@@ -21,7 +22,9 @@ const workflow = sampleWorkflow();
 function renderList() {
   return render(
     <MemoryRouter>
-      <WorkflowList />
+      <ToastProvider>
+        <WorkflowList />
+      </ToastProvider>
     </MemoryRouter>,
   );
 }
@@ -51,7 +54,7 @@ describe("WorkflowList", () => {
     renderList();
 
     expect(await screen.findByText("No workflows yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create workflow" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Create Workflow" })).toHaveAttribute(
       "href",
       "/workflows/new",
     );
@@ -94,6 +97,21 @@ describe("WorkflowList", () => {
 
     expect(deleteWorkflow).toHaveBeenCalledWith(workflow.id);
     expect(screen.queryByText("Unlock alerts")).not.toBeInTheDocument();
+    expect(await screen.findByText("Workflow deleted successfully")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when delete fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listWorkflows).mockResolvedValue([workflow]);
+    vi.mocked(deleteWorkflow).mockRejectedValue(new ApiClientError({ error: "internal_error" }));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderList();
+
+    await user.click(await screen.findByRole("button", { name: "Delete Unlock alerts" }));
+
+    expect(await screen.findByText("Failed to delete workflow")).toBeInTheDocument();
+    expect(screen.getByText("Unlock alerts")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   });
 
   it("disables a workflow with PATCH", async () => {
@@ -106,5 +124,60 @@ describe("WorkflowList", () => {
 
     expect(setWorkflowEnabled).toHaveBeenCalledWith(workflow.id, false);
     expect(await screen.findByText("Disabled")).toBeInTheDocument();
+    expect(await screen.findByText("Workflow disabled")).toBeInTheDocument();
+  });
+
+  it("enables a workflow", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listWorkflows).mockResolvedValue([sampleWorkflow({ enabled: false })]);
+    vi.mocked(setWorkflowEnabled).mockResolvedValue(workflow);
+    renderList();
+
+    await user.click(await screen.findByRole("button", { name: "Enable Unlock alerts" }));
+
+    expect(setWorkflowEnabled).toHaveBeenCalledWith(workflow.id, true);
+    expect(await screen.findByText("Workflow enabled")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when enable or disable fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listWorkflows).mockResolvedValue([workflow]);
+    vi.mocked(setWorkflowEnabled).mockRejectedValue(new ApiClientError({ error: "internal_error" }));
+    renderList();
+
+    await user.click(await screen.findByRole("button", { name: "Disable Unlock alerts" }));
+
+    expect(await screen.findByText("Failed to update workflow")).toBeInTheDocument();
+    expect(screen.getByText("Enabled")).toBeInTheDocument();
+  });
+
+  it("copies a trigger URL from the list", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    vi.mocked(listWorkflows).mockResolvedValue([workflow]);
+    renderList();
+
+    await user.click(await screen.findByRole("button", { name: "Copy trigger URL for Unlock alerts" }));
+
+    expect(writeText).toHaveBeenCalledWith(workflow.triggerUrl);
+    expect(await screen.findByText("Trigger URL copied")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when copying a trigger URL fails", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn<(text: string) => Promise<void>>().mockRejectedValue(new Error("denied")) },
+    });
+    vi.mocked(listWorkflows).mockResolvedValue([workflow]);
+    renderList();
+
+    await user.click(await screen.findByRole("button", { name: "Copy trigger URL for Unlock alerts" }));
+
+    expect(await screen.findByText("Failed to copy trigger URL")).toBeInTheDocument();
   });
 });

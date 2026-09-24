@@ -1,4 +1,5 @@
 import { ApiClientError, createWorkflow, getWorkflow, replaceWorkflow } from "../api/client";
+import { ToastProvider } from "../components/toast";
 import { sampleWorkflow } from "../test/fixtures";
 import { WorkflowEditor } from "./WorkflowEditor";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -37,10 +38,12 @@ const workflow = sampleWorkflow();
 function renderEditor(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/workflows/new" element={<WorkflowEditor />} />
-        <Route path="/workflows/:id" element={<WorkflowEditor />} />
-      </Routes>
+      <ToastProvider>
+        <Routes>
+          <Route path="/workflows/new" element={<WorkflowEditor />} />
+          <Route path="/workflows/:id" element={<WorkflowEditor />} />
+        </Routes>
+      </ToastProvider>
     </MemoryRouter>,
   );
 }
@@ -67,7 +70,7 @@ describe("WorkflowEditor", () => {
     expect(screen.queryByRole("textbox", { name: "Trigger URL" })).not.toBeInTheDocument();
 
     const user = await fillName("Unlock alerts");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save Workflow" }));
 
     expect(createWorkflow).toHaveBeenCalledWith({
       name: "Unlock alerts",
@@ -77,6 +80,7 @@ describe("WorkflowEditor", () => {
     expect(await screen.findByRole("textbox", { name: "Trigger URL" })).toHaveValue(
       workflow.triggerUrl,
     );
+    expect(screen.getByText("Workflow created successfully")).toBeInTheDocument();
   });
 
   it("sends enabled false when the checkbox is unchecked", async () => {
@@ -86,7 +90,7 @@ describe("WorkflowEditor", () => {
 
     const user = await fillName("Unlock alerts");
     await user.click(screen.getByRole("checkbox", { name: "Enabled" }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save Workflow" }));
 
     expect(createWorkflow).toHaveBeenCalledWith({
       name: "Unlock alerts",
@@ -102,8 +106,9 @@ describe("WorkflowEditor", () => {
       target: { value: "{" },
     });
 
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Workflow" })).toBeDisabled();
     expect(screen.getByText("Steps must be valid JSON.")).toBeInTheDocument();
+    expect(screen.queryByText("Failed to save workflow")).not.toBeInTheDocument();
     expect(createWorkflow).not.toHaveBeenCalled();
   });
 
@@ -114,8 +119,9 @@ describe("WorkflowEditor", () => {
       target: { value: "{}" },
     });
 
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Workflow" })).toBeDisabled();
     expect(screen.getByRole("alert").textContent).not.toBe("Steps must be valid JSON.");
+    expect(screen.queryByText("Failed to save workflow")).not.toBeInTheDocument();
     expect(createWorkflow).not.toHaveBeenCalled();
   });
 
@@ -137,6 +143,23 @@ describe("WorkflowEditor", () => {
 
     await user.click(screen.getByRole("button", { name: "Copy" }));
     expect(writeText).toHaveBeenCalledWith(workflow.triggerUrl);
+    expect(await screen.findByText("Trigger URL copied")).toBeInTheDocument();
+  });
+
+  it("shows an error toast when copying the trigger URL fails", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn<(text: string) => Promise<void>>().mockRejectedValue(new Error("denied")),
+      },
+    });
+    vi.mocked(getWorkflow).mockResolvedValue(workflow);
+    renderEditor(`/workflows/${workflow.id}`);
+
+    await user.click(await screen.findByRole("button", { name: "Copy" }));
+
+    expect(await screen.findByText("Failed to copy trigger URL")).toBeInTheDocument();
   });
 
   it("saves edits with PUT and does not send trigger fields", async () => {
@@ -148,7 +171,7 @@ describe("WorkflowEditor", () => {
     const name = await screen.findByRole("textbox", { name: "Name" });
     await user.clear(name);
     await user.type(name, "Renamed alerts");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save Workflow" }));
 
     expect(replaceWorkflow).toHaveBeenCalledWith(workflow.id, {
       name: "Renamed alerts",
@@ -156,6 +179,7 @@ describe("WorkflowEditor", () => {
       steps: [],
     });
     expect(screen.getByRole("textbox", { name: "Trigger URL" })).toHaveValue(workflow.triggerUrl);
+    expect(await screen.findByText("Workflow updated successfully")).toBeInTheDocument();
   });
 
   it("shows not found when the workflow does not exist", async () => {
@@ -177,9 +201,10 @@ describe("WorkflowEditor", () => {
     );
     renderEditor(`/workflows/${workflow.id}`);
 
-    await user.click(await screen.findByRole("button", { name: "Save" }));
+    await user.click(await screen.findByRole("button", { name: "Save Workflow" }));
 
     expect(await screen.findByText("name: too long")).toBeInTheDocument();
+    expect(screen.getByText("Failed to save workflow")).toBeInTheDocument();
   });
 
   it("shows Saving... while the create request is in flight", async () => {
@@ -193,7 +218,7 @@ describe("WorkflowEditor", () => {
     renderEditor("/workflows/new");
 
     const user = await fillName("Unlock alerts");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save Workflow" }));
 
     expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
     resolveCreate(workflow);
