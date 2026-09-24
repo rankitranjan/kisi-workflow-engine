@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import {
   ApiErrorSchema,
-  TriggerTokenSchema,
-  WorkflowSchema,
+  WorkflowDetailSchema,
+  WorkflowListItemSchema,
 } from "@kisi-workflow/shared";
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -14,6 +14,7 @@ import { InMemoryWorkflowRunRepository } from "../db/in-memory-workflow-run-repo
 import type { WorkflowRepository } from "../db/workflow-repository.js";
 
 const DEMO_KEY = "test-demo-key";
+const DEMO_WEBHOOK_URL = "https://discord.com/api/webhooks/example/example";
 const PUBLIC_URL = "https://api.example.com";
 const UNKNOWN_ID = "00000000-0000-4000-8000-000000000000";
 const HEX_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -53,6 +54,7 @@ async function startApp(options?: {
   generateTriggerToken?: () => string;
   bodyLimitBytes?: number;
   demoAccessKey?: string;
+  demoWebhookUrl?: string;
   repository?: WorkflowRepository;
 }): Promise<{ app: FastifyInstance; repository: WorkflowRepository }> {
   const repository = options?.repository ?? new InMemoryWorkflowRepository();
@@ -64,6 +66,7 @@ async function startApp(options?: {
       demoAccessKey: options?.demoAccessKey ?? DEMO_KEY,
       bodyLimitBytes: options?.bodyLimitBytes ?? 256 * 1024,
       allowPrivateUrls: false,
+      demoWebhookUrl: options?.demoWebhookUrl,
     },
     generateTriggerToken: options?.generateTriggerToken,
     logger: false,
@@ -91,7 +94,7 @@ describe("workflow CRUD API", () => {
     });
 
     expect(response.statusCode).toBe(201);
-    const parsed = WorkflowSchema.safeParse(response.json());
+    const parsed = WorkflowDetailSchema.safeParse(response.json());
     expect(parsed.success).toBe(true);
     if (!parsed.success) {
       return;
@@ -99,9 +102,7 @@ describe("workflow CRUD API", () => {
     expect(parsed.data.name).toBe("Unlock alerts");
     expect(parsed.data.enabled).toBe(true);
     expect(parsed.data.steps).toEqual([]);
-    expect(TriggerTokenSchema.safeParse(parsed.data.triggerToken).success).toBe(true);
-    expect(parsed.data.triggerPath).toBe(`/t/${parsed.data.triggerToken}`);
-    expect(parsed.data.triggerUrl).toBe(`${PUBLIC_URL}/t/${parsed.data.triggerToken}`);
+    expect(parsed.data.triggerUrl).toMatch(new RegExp(`^${PUBLIC_URL}/t/[0-9a-f]{32}$`));
   });
 
   it("lists created workflows", async () => {
@@ -111,7 +112,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "GET",
@@ -122,7 +123,7 @@ describe("workflow CRUD API", () => {
     expect(response.statusCode).toBe(200);
     const list = response.json();
     expect(Array.isArray(list)).toBe(true);
-    const parsed = WorkflowSchema.array().safeParse(list);
+    const parsed = WorkflowListItemSchema.array().safeParse(list);
     expect(parsed.success).toBe(true);
     if (!parsed.success) {
       return;
@@ -137,7 +138,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "GET",
@@ -146,7 +147,7 @@ describe("workflow CRUD API", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(WorkflowSchema.parse(response.json()).id).toBe(createdBody.id);
+    expect(WorkflowDetailSchema.parse(response.json()).id).toBe(createdBody.id);
   });
 
   it("patches a subset of workflow fields", async () => {
@@ -156,7 +157,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "PATCH",
@@ -166,11 +167,11 @@ describe("workflow CRUD API", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    const patched = WorkflowSchema.parse(response.json());
+    const patched = WorkflowDetailSchema.parse(response.json());
     expect(patched.name).toBe("Renamed");
     expect(patched.enabled).toBe(false);
     expect(patched.steps).toEqual([]);
-    expect(patched.triggerToken).toBe(createdBody.triggerToken);
+    expect(patched.triggerUrl).toBe(createdBody.triggerUrl);
   });
 
   it("puts a full workflow replacement without changing the token", async () => {
@@ -180,7 +181,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "PUT",
@@ -199,12 +200,11 @@ describe("workflow CRUD API", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    const replaced = WorkflowSchema.parse(response.json());
+    const replaced = WorkflowDetailSchema.parse(response.json());
     expect(replaced.name).toBe("Replaced");
     expect(replaced.enabled).toBe(false);
     expect(replaced.steps).toHaveLength(1);
-    expect(replaced.triggerToken).toBe(createdBody.triggerToken);
-    expect(replaced.triggerPath).toBe(createdBody.triggerPath);
+    expect(replaced.triggerUrl).toBe(createdBody.triggerUrl);
   });
 
   it("deletes a workflow and then returns not_found", async () => {
@@ -214,7 +214,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const deleted = await app.inject({
       method: "DELETE",
@@ -255,7 +255,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "PUT",
@@ -298,7 +298,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "PATCH",
@@ -315,7 +315,7 @@ describe("workflow CRUD API", () => {
       url: `/workflows/${createdBody.id}`,
       headers: authHeaders(),
     });
-    expect(WorkflowSchema.parse(unchanged.json()).triggerToken).toBe(createdBody.triggerToken);
+    expect(WorkflowDetailSchema.parse(unchanged.json()).triggerUrl).toBe(createdBody.triggerUrl);
   });
 
   it("returns unauthorized when the demo access credential is missing", async () => {
@@ -346,7 +346,7 @@ describe("workflow CRUD API", () => {
       headers: authHeaders(),
       payload: createBody,
     });
-    const createdBody = WorkflowSchema.parse(created.json());
+    const createdBody = WorkflowDetailSchema.parse(created.json());
 
     const response = await app.inject({
       method: "GET",
@@ -356,6 +356,215 @@ describe("workflow CRUD API", () => {
 
     expect(response.statusCode).toBe(404);
     expect(parseApiError(response.json())).toMatchObject({ error: "not_found" });
+  });
+});
+
+const secretHttpStep = {
+  type: "http_request" as const,
+  method: "POST" as const,
+  url: DEMO_WEBHOOK_URL,
+  headers: { "Content-Type": "application/json" },
+  body: { mode: "custom" as const, json: { content: "{{title}}" } },
+  timeoutMs: 2000,
+  retries: 3,
+};
+
+function responseHidesWebhook(body: string): void {
+  expect(body).not.toContain(DEMO_WEBHOOK_URL);
+}
+
+describe("demo webhook redaction", () => {
+  let app: FastifyInstance;
+  let repository: WorkflowRepository;
+
+  beforeEach(async () => {
+    ({ app, repository } = await startApp({ demoWebhookUrl: DEMO_WEBHOOK_URL }));
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it("omits steps from GET /workflows and hides the webhook URL", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", steps: [secretHttpStep] },
+    });
+    expect(created.statusCode).toBe(201);
+    responseHidesWebhook(created.body);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/workflows",
+      headers: authHeaders(),
+    });
+
+    expect(response.statusCode).toBe(200);
+    responseHidesWebhook(response.body);
+    const list = WorkflowListItemSchema.array().parse(response.json());
+    expect(list).toEqual([
+      expect.objectContaining({
+        id: WorkflowDetailSchema.parse(created.json()).id,
+        name: "Demo unlock alert",
+        enabled: true,
+      }),
+    ]);
+    expect(response.body).not.toContain("steps");
+  });
+
+  it("returns the redacted marker from GET /workflows/:id and keeps other step fields", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", steps: [secretHttpStep] },
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/workflows/${createdBody.id}`,
+      headers: authHeaders(),
+    });
+
+    expect(response.statusCode).toBe(200);
+    responseHidesWebhook(response.body);
+    expect(WorkflowDetailSchema.parse(response.json()).steps).toEqual([
+      { ...secretHttpStep, url: { redacted: true } },
+    ]);
+  });
+
+  it("returns a normal http_request URL unchanged", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: {
+        name: "Other hook",
+        steps: [{ ...secretHttpStep, url: "https://example.com/hook" }],
+      },
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/workflows/${createdBody.id}`,
+      headers: authHeaders(),
+    });
+
+    expect(WorkflowDetailSchema.parse(response.json()).steps).toEqual([
+      { ...secretHttpStep, url: "https://example.com/hook" },
+    ]);
+  });
+
+  it("restores the configured webhook when PUT sends the redacted marker", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", steps: [secretHttpStep] },
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+
+    const response = await app.inject({
+      method: "PUT",
+      url: `/workflows/${createdBody.id}`,
+      headers: authHeaders(),
+      payload: {
+        name: "Renamed alert",
+        enabled: false,
+        steps: [
+          { type: "filter", conditions: [{ path: "success", op: "eq", value: false }] },
+          { ...secretHttpStep, url: { redacted: true } },
+        ],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    responseHidesWebhook(response.body);
+    expect(WorkflowDetailSchema.parse(response.json()).steps).toEqual([
+      {
+        type: "filter",
+        conditions: [{ path: "success", op: "eq", value: false }],
+      },
+      { ...secretHttpStep, url: { redacted: true } },
+    ]);
+    const stored = await repository.getById(createdBody.id);
+    expect(stored?.steps).toEqual([
+      {
+        type: "filter",
+        conditions: [{ path: "success", op: "eq", value: false }],
+      },
+      secretHttpStep,
+    ]);
+  });
+
+  it("stores a normal URL when PUT replaces the redacted webhook", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", steps: [secretHttpStep] },
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+    const replacement = { ...secretHttpStep, url: "https://example.com/hook" };
+
+    const response = await app.inject({
+      method: "PUT",
+      url: `/workflows/${createdBody.id}`,
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", enabled: true, steps: [replacement] },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(WorkflowDetailSchema.parse(response.json()).steps).toEqual([replacement]);
+    const stored = await repository.getById(createdBody.id);
+    expect(stored?.steps).toEqual([replacement]);
+  });
+
+  it("preserves stored steps when PATCH omits them and hides the webhook", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: { name: "Demo unlock alert", steps: [secretHttpStep] },
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/workflows/${createdBody.id}`,
+      headers: authHeaders(),
+      payload: { enabled: false },
+    });
+
+    expect(response.statusCode).toBe(200);
+    responseHidesWebhook(response.body);
+    expect(WorkflowDetailSchema.parse(response.json())).toMatchObject({
+      enabled: false,
+      steps: [{ ...secretHttpStep, url: { redacted: true } }],
+    });
+    const stored = await repository.getById(createdBody.id);
+    expect(stored?.steps).toEqual([secretHttpStep]);
+    expect(stored?.enabled).toBe(false);
+  });
+
+  it("returns 400 when POST contains the redacted marker", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: {
+        name: "Demo unlock alert",
+        steps: [{ ...secretHttpStep, url: { redacted: true } }],
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(parseApiError(response.json())).toMatchObject({ error: "validation_error" });
+    expect(await repository.list()).toEqual([]);
   });
 });
 
@@ -379,7 +588,7 @@ describe("workflow token uniqueness", () => {
         payload: { name: "First", steps: [] },
       });
       expect(first.statusCode).toBe(201);
-      expect(WorkflowSchema.parse(first.json()).triggerToken).toBe(HEX_A);
+      expect(WorkflowDetailSchema.parse(first.json()).triggerUrl).toBe(`${PUBLIC_URL}/t/${HEX_A}`);
 
       const second = await app.inject({
         method: "POST",
@@ -388,7 +597,7 @@ describe("workflow token uniqueness", () => {
         payload: { name: "Second", steps: [] },
       });
       expect(second.statusCode).toBe(201);
-      expect(WorkflowSchema.parse(second.json()).triggerToken).toBe(HEX_B);
+      expect(WorkflowDetailSchema.parse(second.json()).triggerUrl).toBe(`${PUBLIC_URL}/t/${HEX_B}`);
     } finally {
       await app.close();
     }

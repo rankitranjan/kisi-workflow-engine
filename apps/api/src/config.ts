@@ -10,6 +10,7 @@ const EnvSchema = z.object({
   DEMO_ACCESS_KEY: z.string().min(1),
   PORT: z.string().optional(),
   ALLOW_PRIVATE_URLS: z.enum(["true", "false"]).optional(),
+  DEMO_WEBHOOK_URL: z.string().optional(),
 });
 
 export type HttpConfig = {
@@ -17,6 +18,7 @@ export type HttpConfig = {
   demoAccessKey: string;
   bodyLimitBytes: number;
   allowPrivateUrls: boolean;
+  demoWebhookUrl?: string;
 };
 
 export type AppConfig = HttpConfig & {
@@ -37,6 +39,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     demoAccessKey: parsed.DEMO_ACCESS_KEY,
     bodyLimitBytes: CRUD_BODY_LIMIT_BYTES,
     allowPrivateUrls: parsed.ALLOW_PRIVATE_URLS === "true",
+    demoWebhookUrl: readDemoWebhookUrl(parsed.DEMO_WEBHOOK_URL),
     port,
   };
+}
+
+function readDemoWebhookUrl(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }

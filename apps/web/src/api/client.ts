@@ -1,9 +1,11 @@
 import {
   ApiErrorSchema,
-  WorkflowSchema,
+  WorkflowDetailSchema,
+  WorkflowListItemSchema,
   type ApiError,
-  type Workflow,
   type WorkflowCreate,
+  type WorkflowDetail,
+  type WorkflowListItem,
   type WorkflowPut,
 } from "@kisi-workflow/shared";
 
@@ -129,37 +131,37 @@ async function send(path: string, init: { method: string; body?: string }): Prom
   return payload;
 }
 
-function parseWorkflow(payload: unknown): Workflow {
-  const parsed = WorkflowSchema.safeParse(payload);
+function parseWorkflowDetail(payload: unknown): WorkflowDetail {
+  const parsed = WorkflowDetailSchema.safeParse(payload);
   if (!parsed.success) {
     throw new Error("Unexpected workflow response");
   }
   return parsed.data;
 }
 
-export async function listWorkflows(): Promise<Workflow[]> {
+export async function listWorkflows(): Promise<WorkflowListItem[]> {
   const payload = await send("/workflows", { method: "GET" });
-  const parsed = WorkflowSchema.array().safeParse(payload);
+  const parsed = WorkflowListItemSchema.array().safeParse(payload);
   if (!parsed.success) {
     throw new Error("Unexpected workflow response");
   }
   return parsed.data;
 }
 
-export async function getWorkflow(id: string): Promise<Workflow> {
-  return parseWorkflow(await send(workflowUrl(id), { method: "GET" }));
+export async function getWorkflow(id: string): Promise<WorkflowDetail> {
+  return parseWorkflowDetail(await send(workflowUrl(id), { method: "GET" }));
 }
 
-export async function createWorkflow(body: WorkflowCreate): Promise<Workflow> {
-  return parseWorkflow(await send("/workflows", { method: "POST", body: JSON.stringify(body) }));
+export async function createWorkflow(body: WorkflowCreate): Promise<WorkflowDetail> {
+  return parseWorkflowDetail(await send("/workflows", { method: "POST", body: JSON.stringify(body) }));
 }
 
-export async function replaceWorkflow(id: string, body: WorkflowPut): Promise<Workflow> {
-  return parseWorkflow(await send(workflowUrl(id), { method: "PUT", body: JSON.stringify(body) }));
+export async function replaceWorkflow(id: string, body: WorkflowPut): Promise<WorkflowDetail> {
+  return parseWorkflowDetail(await send(workflowUrl(id), { method: "PUT", body: JSON.stringify(body) }));
 }
 
-export async function setWorkflowEnabled(id: string, enabled: boolean): Promise<Workflow> {
-  return parseWorkflow(
+export async function setWorkflowEnabled(id: string, enabled: boolean): Promise<WorkflowDetail> {
+  return parseWorkflowDetail(
     await send(workflowUrl(id), { method: "PATCH", body: JSON.stringify({ enabled }) }),
   );
 }

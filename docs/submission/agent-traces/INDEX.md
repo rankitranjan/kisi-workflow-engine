@@ -180,3 +180,12 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - Lines: 22
 
 - Subagents: none
+
+## 2026-09-24 — Production webhook redaction
+- Chat ID: `7395155c-44da-47ff-8d9d-499a28d429bc`
+- Purpose: Production security fix — separate workflow list/detail DTOs and server-side Discord webhook redaction/restoration
+- Source: `/Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/7395155c-44da-47ff-8d9d-499a28d429bc/7395155c-44da-47ff-8d9d-499a28d429bc.jsonl`
+- Submitted: `docs/submission/agent-traces/7395155c-44da-47ff-8d9d-499a28d429bc.jsonl`
+- SHA-256: `1dc1fcf6c7ba8e4d56021bb3a53965a5051fbd6540c3a26542c35558a2b45cb4`
+- Lines: 53
+- Subagents: none

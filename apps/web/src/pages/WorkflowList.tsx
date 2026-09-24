@@ -1,4 +1,4 @@
-import type { Workflow } from "@kisi-workflow/shared";
+import type { WorkflowDetail, WorkflowListItem } from "@kisi-workflow/shared";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
@@ -34,7 +34,7 @@ function DeleteIcon() {
 }
 
 export function WorkflowList() {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
   const [requestId, setRequestId] = useState(0);
@@ -65,7 +65,7 @@ export function WorkflowList() {
     };
   }, [requestId]);
 
-  async function onDelete(workflow: Workflow) {
+  async function onDelete(workflow: WorkflowListItem) {
     const confirmed = window.confirm(`Delete ${workflow.name}? This cannot be undone.`);
     if (!confirmed) {
       return;
@@ -79,17 +79,19 @@ export function WorkflowList() {
     }
   }
 
-  async function onToggle(workflow: Workflow) {
+  async function onToggle(workflow: WorkflowListItem) {
     try {
       const updated = await setWorkflowEnabled(workflow.id, !workflow.enabled);
-      setWorkflows((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setWorkflows((current) =>
+        current.map((item) => (item.id === updated.id ? listItemFromDetail(updated) : item)),
+      );
       showToast(updated.enabled ? "Workflow enabled" : "Workflow disabled", "success");
     } catch {
       showToast("Failed to update workflow", "error");
     }
   }
 
-  async function onCopy(workflow: Workflow) {
+  async function onCopy(workflow: WorkflowListItem) {
     try {
       await navigator.clipboard.writeText(workflow.triggerUrl);
       showToast("Trigger URL copied", "success");
@@ -187,4 +189,13 @@ export function WorkflowList() {
       </section>
     </main>
   );
+}
+
+function listItemFromDetail(workflow: WorkflowDetail): WorkflowListItem {
+  return {
+    id: workflow.id,
+    name: workflow.name,
+    enabled: workflow.enabled,
+    triggerUrl: workflow.triggerUrl,
+  };
 }

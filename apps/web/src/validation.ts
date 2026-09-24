@@ -1,11 +1,11 @@
 import {
   WORKFLOW_NAME_MAX,
+  PublicWorkflowStepsSchema,
   WorkflowCreateSchema,
-  WorkflowDefinitionSchema,
   WorkflowNameSchema,
   WorkflowPutSchema,
+  type PublicWorkflowStep,
   type WorkflowCreate,
-  type WorkflowDefinition,
   type WorkflowPut,
 } from "@kisi-workflow/shared";
 
@@ -15,7 +15,7 @@ export type FormErrors = {
 };
 
 export type StepsValidation =
-  | { ok: true; steps: WorkflowDefinition }
+  | { ok: true; steps: PublicWorkflowStep[] }
   | { ok: false; message: string };
 
 type FormInput = {
@@ -32,7 +32,7 @@ export function validateStepsText(text: string): StepsValidation {
     return { ok: false, message: "Steps must be valid JSON." };
   }
 
-  const result = WorkflowDefinitionSchema.safeParse(parsed);
+  const result = PublicWorkflowStepsSchema.safeParse(parsed);
   if (!result.success) {
     const message = result.error.issues
       .map((issue) => {
@@ -60,7 +60,7 @@ function nameError(name: string): string | undefined {
   return result.error.issues[0]?.message ?? "Enter a name.";
 }
 
-function validateFields(input: FormInput): { errors: FormErrors; steps?: WorkflowDefinition } {
+function validateFields(input: FormInput): { errors: FormErrors; steps?: PublicWorkflowStep[] } {
   const errors: FormErrors = {};
   const invalidName = nameError(input.name);
   if (invalidName !== undefined) {

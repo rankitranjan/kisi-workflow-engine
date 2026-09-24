@@ -1,12 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { WorkflowStepsSchema } from "@kisi-workflow/shared";
-import type { WorkflowPatch, WorkflowPut } from "@kisi-workflow/shared";
-
 import { UniqueTriggerTokenError } from "./errors.js";
 import type {
   PersistedWorkflow,
   WorkflowCreateRecord,
+  WorkflowReplaceRecord,
   WorkflowRepository,
+  WorkflowUpdateRecord,
 } from "./workflow-repository.js";
 
 function toInputJson(value: unknown): Prisma.InputJsonValue {
@@ -84,7 +84,7 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
     }
   }
 
-  async update(id: string, patch: WorkflowPatch): Promise<PersistedWorkflow | null> {
+  async update(id: string, patch: WorkflowUpdateRecord): Promise<PersistedWorkflow | null> {
     try {
       const row = await this.prisma.workflow.update({
         where: { id },
@@ -103,7 +103,7 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
     }
   }
 
-  async replace(id: string, put: WorkflowPut): Promise<PersistedWorkflow | null> {
+  async replace(id: string, put: WorkflowReplaceRecord): Promise<PersistedWorkflow | null> {
     try {
       const row = await this.prisma.workflow.update({
         where: { id },
