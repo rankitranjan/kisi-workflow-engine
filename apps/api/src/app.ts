@@ -41,11 +41,10 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   await app.register(cors, {
-    origin: new URL(options.config.publicUrl).origin,
+    origin: options.config.corsOrigin,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["content-type", "x-demo-key", "accept"],
   });
-
   const service = new WorkflowService(
     options.repository,
     options.config.publicUrl,

@@ -68,6 +68,7 @@ async function startApp(options?: {
     runRepository,
     config: {
       publicUrl: PUBLIC_URL,
+      corsOrigin: "https://app.example.com",
       demoAccessKey: DEMO_KEY,
       bodyLimitBytes: 256 * 1024,
       allowPrivateUrls: options?.allowPrivateUrls ?? false,

@@ -7,6 +7,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: "postgresql://kisi:kisi@localhost:5432/workflow_engine",
       PUBLIC_URL: "https://api.example.com",
+      CORS_ORIGIN: "https://app.example.com",
       DEMO_ACCESS_KEY: "test-demo-key",
     },
   },

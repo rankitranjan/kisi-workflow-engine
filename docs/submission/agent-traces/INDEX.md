@@ -188,4 +188,11 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - Submitted: `docs/submission/agent-traces/7395155c-44da-47ff-8d9d-499a28d429bc.jsonl`
 - SHA-256: `1dc1fcf6c7ba8e4d56021bb3a53965a5051fbd6540c3a26542c35558a2b45cb4`
 - Lines: 53
+## 2026-09-25 — Separate CORS origin from API public URL
+- Chat ID: `8d9d603b-87c2-43d1-8d4f-754616c7124c`
+- Purpose: Production configuration fix — keep `PUBLIC_URL` for API trigger URLs and use separate `CORS_ORIGIN` for browser CORS
+- Source: `/Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/8d9d603b-87c2-43d1-8d4f-754616c7124c/8d9d603b-87c2-43d1-8d4f-754616c7124c.jsonl`
+- Submitted: `docs/submission/agent-traces/8d9d603b-87c2-43d1-8d4f-754616c7124c.jsonl`
+- SHA-256: `f769ed05d4c7aed9ccc3e70ebf9ca834a5125bd315290eaf30e9619d8bc67bb7`
+- Lines: 30
 - Subagents: none

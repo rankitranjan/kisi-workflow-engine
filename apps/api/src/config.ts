@@ -7,6 +7,7 @@ export const DEFAULT_PORT = 3000;
 const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
   PUBLIC_URL: z.httpUrl(),
+  CORS_ORIGIN: z.httpUrl(),
   DEMO_ACCESS_KEY: z.string().min(1),
   PORT: z.string().optional(),
   ALLOW_PRIVATE_URLS: z.enum(["true", "false"]).optional(),
@@ -15,6 +16,7 @@ const EnvSchema = z.object({
 
 export type HttpConfig = {
   publicUrl: string;
+  corsOrigin: string;
   demoAccessKey: string;
   bodyLimitBytes: number;
   allowPrivateUrls: boolean;
@@ -36,6 +38,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   return {
     databaseUrl: parsed.DATABASE_URL,
     publicUrl: parsed.PUBLIC_URL,
+    corsOrigin: new URL(parsed.CORS_ORIGIN).origin,
     demoAccessKey: parsed.DEMO_ACCESS_KEY,
     bodyLimitBytes: CRUD_BODY_LIMIT_BYTES,
     allowPrivateUrls: parsed.ALLOW_PRIVATE_URLS === "true",

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import {
   ApiErrorSchema,
+  TriggerTokenSchema,
   WorkflowDetailSchema,
   WorkflowListItemSchema,
 } from "@kisi-workflow/shared";
@@ -16,6 +17,7 @@ import type { WorkflowRepository } from "../db/workflow-repository.js";
 const DEMO_KEY = "test-demo-key";
 const DEMO_WEBHOOK_URL = "https://discord.com/api/webhooks/example/example";
 const PUBLIC_URL = "https://api.example.com";
+const CORS_ORIGIN = "https://app.example.com";
 const UNKNOWN_ID = "00000000-0000-4000-8000-000000000000";
 const HEX_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const HEX_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -63,6 +65,7 @@ async function startApp(options?: {
     runRepository: new InMemoryWorkflowRunRepository(),
     config: {
       publicUrl: PUBLIC_URL,
+      corsOrigin: CORS_ORIGIN,
       demoAccessKey: options?.demoAccessKey ?? DEMO_KEY,
       bodyLimitBytes: options?.bodyLimitBytes ?? 256 * 1024,
       allowPrivateUrls: false,
@@ -103,6 +106,29 @@ describe("workflow CRUD API", () => {
     expect(parsed.data.enabled).toBe(true);
     expect(parsed.data.steps).toEqual([]);
     expect(parsed.data.triggerUrl).toMatch(new RegExp(`^${PUBLIC_URL}/t/[0-9a-f]{32}$`));
+  });
+
+  it("builds triggerUrl from PUBLIC_URL when CORS_ORIGIN is a different origin", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/workflows",
+      headers: authHeaders(),
+      payload: createBody,
+    });
+    const createdBody = WorkflowDetailSchema.parse(created.json());
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/workflows",
+      headers: authHeaders(),
+    });
+
+    const listed = WorkflowListItemSchema.array()
+      .parse(response.json())
+      .find((workflow) => workflow.id === createdBody.id);
+    expect(listed?.triggerUrl).toBe(createdBody.triggerUrl);
+    expect(listed?.triggerUrl).toMatch(new RegExp(`^${PUBLIC_URL}/t/[0-9a-f]{32}$`));
+    expect(listed?.triggerUrl.startsWith(CORS_ORIGIN)).toBe(false);
   });
 
   it("lists created workflows", async () => {

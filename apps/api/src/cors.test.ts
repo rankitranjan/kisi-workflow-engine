@@ -6,11 +6,12 @@ import { InMemoryWorkflowRepository } from "./db/in-memory-workflow-repository.j
 import { InMemoryWorkflowRunRepository } from "./db/in-memory-workflow-run-repository.js";
 
 const DEMO_KEY = "test-demo-key";
-const PUBLIC_URL = "https://workflow.example.com";
+const PUBLIC_URL = "https://api.example.com";
+const CORS_ORIGIN = "https://app.example.com";
 const OTHER_ORIGIN = "https://evil.example";
 
 const PREFLIGHT_HEADERS = {
-  origin: PUBLIC_URL,
+  origin: CORS_ORIGIN,
   "access-control-request-method": "GET",
   "access-control-request-headers": "x-demo-key, content-type",
 };
@@ -23,12 +24,13 @@ function headerList(value: string | string[] | undefined): string[] {
     .filter((part) => part.length > 0);
 }
 
-async function startApp(publicUrl = PUBLIC_URL): Promise<FastifyInstance> {
+async function startApp(): Promise<FastifyInstance> {
   return buildApp({
     repository: new InMemoryWorkflowRepository(),
     runRepository: new InMemoryWorkflowRunRepository(),
     config: {
-      publicUrl,
+      publicUrl: PUBLIC_URL,
+      corsOrigin: CORS_ORIGIN,
       demoAccessKey: DEMO_KEY,
       bodyLimitBytes: 256 * 1024,
       allowPrivateUrls: false,
@@ -48,7 +50,7 @@ describe("CORS preflight", () => {
     await app.close();
   });
 
-  it("answers an OPTIONS preflight from the PUBLIC_URL origin without x-demo-key", async () => {
+  it("answers an OPTIONS preflight from the CORS_ORIGIN without x-demo-key", async () => {
     const response = await app.inject({
       method: "OPTIONS",
       url: "/workflows",
@@ -56,7 +58,7 @@ describe("CORS preflight", () => {
     });
 
     expect(response.statusCode).toBe(204);
-    expect(response.headers["access-control-allow-origin"]).toBe(PUBLIC_URL);
+    expect(response.headers["access-control-allow-origin"]).toBe(CORS_ORIGIN);
     expect(headerList(response.headers["access-control-allow-methods"])).toEqual(
       expect.arrayContaining(["get", "post", "put", "patch", "delete", "options"]),
     );
@@ -78,27 +80,40 @@ describe("CORS preflight", () => {
     expect(response.headers["access-control-allow-origin"]).not.toBe(OTHER_ORIGIN);
   });
 
+  it("does not allow the API PUBLIC_URL as a CORS origin", async () => {
+    const response = await app.inject({
+      method: "OPTIONS",
+      url: "/workflows",
+      headers: {
+        ...PREFLIGHT_HEADERS,
+        origin: PUBLIC_URL,
+      },
+    });
+
+    expect(response.headers["access-control-allow-origin"]).not.toBe(PUBLIC_URL);
+  });
+
   it("still requires x-demo-key for the actual workflow request", async () => {
     const response = await app.inject({
       method: "GET",
       url: "/workflows",
-      headers: { origin: PUBLIC_URL },
+      headers: { origin: CORS_ORIGIN },
     });
 
     expect(response.statusCode).toBe(401);
   });
 
-  it("allows the actual workflow request from the PUBLIC_URL origin when authenticated", async () => {
+  it("allows the actual workflow request from the CORS_ORIGIN when authenticated", async () => {
     const response = await app.inject({
       method: "GET",
       url: "/workflows",
       headers: {
-        origin: PUBLIC_URL,
+        origin: CORS_ORIGIN,
         "x-demo-key": DEMO_KEY,
       },
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.headers["access-control-allow-origin"]).toBe(PUBLIC_URL);
+    expect(response.headers["access-control-allow-origin"]).toBe(CORS_ORIGIN);
   });
 });

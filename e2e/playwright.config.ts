@@ -43,6 +43,7 @@ export default defineConfig({
       env: processEnv({
         DATABASE_URL: databaseUrl,
         PUBLIC_URL: publicUrl,
+        CORS_ORIGIN: "http://app.localhost:5173",
         DEMO_ACCESS_KEY: demoAccessKey,
         PORT: "3000",
         ALLOW_PRIVATE_URLS: "true",

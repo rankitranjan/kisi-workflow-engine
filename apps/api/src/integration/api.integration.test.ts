@@ -114,6 +114,7 @@ async function openApp(options?: {
     runRepository: new PrismaWorkflowRunRepository(prisma),
     config: {
       publicUrl: PUBLIC_URL,
+      corsOrigin: "https://app.example.com",
       demoAccessKey: DEMO_KEY,
       bodyLimitBytes: CRUD_BODY_LIMIT_BYTES,
       allowPrivateUrls: false,

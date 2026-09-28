@@ -10,6 +10,7 @@ const app = await buildApp({
   runRepository: new PrismaWorkflowRunRepository(prisma),
   config: {
     publicUrl: config.publicUrl,
+    corsOrigin: config.corsOrigin,
     demoAccessKey: config.demoAccessKey,
     bodyLimitBytes: config.bodyLimitBytes,
       allowPrivateUrls: config.allowPrivateUrls,
