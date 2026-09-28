@@ -193,6 +193,6 @@ Metadata only. The `.jsonl` files are unmodified copies of Cursor agent transcri
 - Purpose: Production configuration fix — keep `PUBLIC_URL` for API trigger URLs and use separate `CORS_ORIGIN` for browser CORS
 - Source: `/Users/rankit/.cursor/projects/Users-rankit-kisi-workflow-engine/agent-transcripts/8d9d603b-87c2-43d1-8d4f-754616c7124c/8d9d603b-87c2-43d1-8d4f-754616c7124c.jsonl`
 - Submitted: `docs/submission/agent-traces/8d9d603b-87c2-43d1-8d4f-754616c7124c.jsonl`
-- SHA-256: `f769ed05d4c7aed9ccc3e70ebf9ca834a5125bd315290eaf30e9619d8bc67bb7`
-- Lines: 30
+- SHA-256: `5d98a2eb8f413f3c458ca143a9469b294ee9541266aa3dd0c53a377181f8610b`
+- Lines: 58
 - Subagents: none
